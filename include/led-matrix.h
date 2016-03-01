@@ -27,6 +27,7 @@
 #include "canvas.h"
 #include "thread.h"
 #include "transformer.h"
+#include "ak-transformer.h"
 
 namespace rgb_matrix {
 class FrameCanvas;   // Canvas for Double- and Multibuffering

@@ -7,6 +7,7 @@
 #include "led-matrix.h"
 #include "threaded-canvas-manipulator.h"
 #include "transformer.h"
+#include "ak-transformer.h"
 #include "graphics.h"
 
 #include <assert.h>
@@ -1107,7 +1108,7 @@ int main(int argc, char *argv[]) {
     case 'L':
       // The 'large' display assumes a chain of four displays with 32x32
       chain = 4;
-      rows = 32;
+      rows = 16;
       large_display = true;
       break;
 
@@ -1190,7 +1191,7 @@ int main(int argc, char *argv[]) {
 
   if (large_display) {
     // Mapping the coordinates of a 32x128 display mapped to a square of 64x64
-    transformer->AddTransformer(new LargeSquare64x64Transformer());
+    transformer->AddTransformer(new Rect64x32Transformer());
   }
 
   if (rotation > 0) {
