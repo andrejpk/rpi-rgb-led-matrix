@@ -50,7 +50,7 @@ int Rect64x32Transformer::TransformCanvas::height() const {
 
 void Rect64x32Transformer::TransformCanvas::SetPixel(int x, int y, uint8_t red, uint8_t green, uint8_t blue) {
   if (x < 0 || x >= width() || y < 0 || y >= height()) return;
-  x = width() - x;  
+  x = width() - x - 1;  
   // y = height() - y;
   // We have up to column 64 one direction, then folding around. Lets map
   if (y >= 16) {
@@ -60,7 +60,7 @@ void Rect64x32Transformer::TransformCanvas::SetPixel(int x, int y, uint8_t red, 
   else
   {
       // x = 128 - x;
-      y = 16 - y;
+      y = 15 - y;
   }
   delegatee_->SetPixel(x, y, red, green, blue);
 }
