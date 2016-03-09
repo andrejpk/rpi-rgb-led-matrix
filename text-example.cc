@@ -6,6 +6,8 @@
 
 #include "led-matrix.h"
 #include "graphics.h"
+#include "transformer.h"
+#include "ak-transformer.h"
 
 #include <getopt.h>
 #include <stdio.h>
@@ -26,6 +28,7 @@ static int usage(const char *progname) {
           "\t-P <parallel> : For Plus-models or RPi2: parallel chains. 1..3. "
           "Default: 1\n"
           "\t-c <chained>  : Daisy-chained boards. Default: 1.\n"
+          "\t-L            : Large display (alternate layout)\n"
           "\t-b <brightness>: Sets brightness percent. Default: 100.\n"
           "\t-x <x-origin> : X-Origin of displaying text (Default: 0)\n"
           "\t-y <y-origin> : Y-Origin of displaying text (Default: 0)\n"
@@ -46,9 +49,10 @@ int main(int argc, char *argv[]) {
   int x_orig = 0;
   int y_orig = -1;
   int brightness = 100;
+  bool large_display = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "r:P:c:x:y:f:C:b:")) != -1) {
+  while ((opt = getopt(argc, argv, "r:P:c:x:y:L:f:C:b:")) != -1) {
     switch (opt) {
     case 'r': rows = atoi(optarg); break;
     case 'P': parallel = atoi(optarg); break;
@@ -56,6 +60,12 @@ int main(int argc, char *argv[]) {
     case 'b': brightness = atoi(optarg); break;
     case 'x': x_orig = atoi(optarg); break;
     case 'y': y_orig = atoi(optarg); break;
+    case 'L':
+      // The 'large' display assumes a chain of four displays with 32x32
+      chain = 4;
+      rows = 16;
+      large_display = true;
+      break;
     case 'f': bdf_font_file = strdup(optarg); break;
     case 'C':
       if (!parseColor(&color, optarg)) {
@@ -115,6 +125,14 @@ int main(int argc, char *argv[]) {
    */
   RGBMatrix *canvas = new RGBMatrix(&io, rows, chain, parallel);
   canvas->SetBrightness(brightness);
+  
+  LinkedTransformer *transformer = new LinkedTransformer();
+  canvas->SetTransformer(transformer);
+
+  if (large_display) {
+    // Mapping the coordinates of a 32x128 display mapped to a square of 64x64
+    transformer->AddTransformer(new Rect64x32Transformer());
+  }
 
   bool all_extreme_colors = brightness == 100;
   all_extreme_colors &= color.r == 0 || color.r == 255;
