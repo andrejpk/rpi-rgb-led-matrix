@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   bool large_display = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "r:P:c:x:y:L:f:C:b:")) != -1) {
+  while ((opt = getopt(argc, argv, "r:P:c:x:y:Lf:C:b:")) != -1) {
     switch (opt) {
     case 'r': rows = atoi(optarg); break;
     case 'P': parallel = atoi(optarg); break;
