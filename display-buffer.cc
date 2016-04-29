@@ -15,8 +15,8 @@ using namespace rgb_matrix;
 
 static int usage(const char *progname) {
   fprintf(stderr, "usage: %s [options]\n", progname);
-  fprintf(stderr, "Reads text from stdin and displays it. "
-          "Empty string: clear screen\n");
+  fprintf(stderr, "Reads binary image data from stdin and displays it.\n"
+          "Image format is a straight bitmap, 4 bytes per pixel (RGBA). Alpha is ignored.\n");
   fprintf(stderr, "Options:\n"
           "\t-r <rows>     : Display rows. 16 for 16x32, 32 for 32x32. "
           "Default: 32\n"
@@ -24,7 +24,8 @@ static int usage(const char *progname) {
           "Default: 1\n"
           "\t-c <chained>  : Daisy-chained boards. Default: 1.\n"
           "\t-L            : Large display (alternate layout)\n"
-          "\t-b <brightness>: Sets brightness percent. Default: 100.\n");
+          "\t-b <brightness>: Sets brightness percent. Default: 100.\n"
+          "\t-d            : Run with debug settings (framerate pixel, diag messages)");
   return 1;
 }
 
@@ -35,9 +36,10 @@ int main(int argc, char *argv[]) {
   int parallel = 1;
   int brightness = 100;
   bool large_display = false;
+  bool debug = false;
 
   int opt;
-  while ((opt = getopt(argc, argv, "r:P:Lc:b:")) != -1) {
+  while ((opt = getopt(argc, argv, "r:P:Lc:b:d")) != -1) {
     switch (opt) {
     case 'r': rows = atoi(optarg); break;
     case 'P': parallel = atoi(optarg); break;
@@ -49,6 +51,7 @@ int main(int argc, char *argv[]) {
       rows = 16;
       large_display = true;
       break;  
+    case 'd': debug = true;
     default:
       return usage(argv[0]);
     }
@@ -105,7 +108,7 @@ int main(int argc, char *argv[]) {
 
   size_t buffer_rows = canvas->height();
   size_t buffer_cols = canvas->width();
-  int bytesPerPixel = 3;  // rgb @ 8 bytes each
+  int bytesPerPixel = 4;  // rgb @ 8 bytes each
   int displayBufferSize = buffer_rows * buffer_cols * bytesPerPixel; 
   char *displayBuffer = (char *)malloc(displayBufferSize); 
   if (isatty(STDIN_FILENO)) {
@@ -113,21 +116,33 @@ int main(int argc, char *argv[]) {
     printf("Buffer ready, %d x %d (%d bytes)\n", buffer_cols, buffer_rows, displayBufferSize );
   }
   
-  char* thisPixel = displayBuffer;
+  char* thisPixel;
+  int frameCounter = 0;
   while (true) {
     fread(displayBuffer, 1, displayBufferSize, stdin);
+    thisPixel = displayBuffer; 
+    // canvas->Clear();
     for (size_t y = 0; y < buffer_rows; ++y) {
-      for (size_t x = 0; x < buffer_cols; ++x) {         
-        canvas
-          ->SetPixel(x, y,
-                      thisPixel[0],
-                      thisPixel[1],
-                      thisPixel[2]);
+      for (size_t x = 0; x < buffer_cols; ++x) {  
+        if (debug && x == 0 && y == 0) // frame diag pixel
+        {  
+          canvas
+            ->SetPixel(x, y, (frameCounter % 2) * 0xff, 0xff, 0xff);
+        } 
+        else
+        {      
+          canvas
+            ->SetPixel(x, y,
+                        thisPixel[0],
+                        thisPixel[1],
+                        thisPixel[2]);
+        }
         thisPixel += bytesPerPixel;
       }
     }
-    printf("frame done");
-    usleep(100 * 1000);
+    if (debug) printf("frame done");
+    frameCounter++;
+    // usleep(100 * 1000);
   }
   
   free(displayBuffer);
