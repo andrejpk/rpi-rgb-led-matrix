@@ -90,9 +90,12 @@ int main(int argc, char *argv[]) {
    */
   RGBMatrix *canvas = new RGBMatrix(&io, rows, chain, parallel);
   canvas->SetBrightness(brightness);
+  canvas->set_luminance_correct(true);
   
   LinkedTransformer *transformer = new LinkedTransformer();
   canvas->SetTransformer(transformer);
+  
+  canvas->SetPWMBits(8);
 
   if (large_display) {
     // Mapping the coordinates of a 32x128 display mapped to a square of 64x64
@@ -103,8 +106,8 @@ int main(int argc, char *argv[]) {
   all_extreme_colors &= color.r == 0 || color.r == 255;
   all_extreme_colors &= color.g == 0 || color.g == 255;
   all_extreme_colors &= color.b == 0 || color.b == 255;
-  if (all_extreme_colors)
-    canvas->SetPWMBits(1);
+  // if (all_extreme_colors)
+  //   canvas->SetPWMBits(1);
 
   size_t buffer_rows = canvas->height();
   size_t buffer_cols = canvas->width();
